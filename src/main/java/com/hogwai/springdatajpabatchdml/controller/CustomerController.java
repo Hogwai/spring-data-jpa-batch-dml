@@ -1,75 +1,51 @@
 package com.hogwai.springdatajpabatchdml.controller;
 
 import com.hogwai.springdatajpabatchdml.model.Customer;
-import com.hogwai.springdatajpabatchdml.repository.CustomerCustomRepository;
+import com.hogwai.springdatajpabatchdml.service.CustomerService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StopWatch;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 @RestController
 public class CustomerController {
-    private final Random random = new Random();
+    private final CustomerService customerService;
 
-
-    private final CustomerCustomRepository customerCustomRepository;
-
-    public CustomerController(CustomerCustomRepository customerCustomRepository) {
-        this.customerCustomRepository = customerCustomRepository;
+    public CustomerController(CustomerService customerService) {
+        this.customerService = customerService;
     }
 
     @PostMapping("/customers")
-    @Transactional
     public ResponseEntity<String> insertCustomersBatch() {
-        List<Customer> customers = new ArrayList<>(1000000);
-
-        for (int i = 0; i < 100000; i++) {
-            Customer customer = Customer.builder()
-                    .id((long) i + 1)
-                    .firstName(generateRandomString())
-                    .lastName(generateRandomString())
-                    .address(generateRandomString())
-                    .city(generateRandomString())
-                    .country(generateRandomString())
-                    .build();
-            customers.add(customer);
-        }
-        System.out.println("Generated customers: " + customers.size());
         StopWatch watch = new StopWatch();
         watch.start();
-        customerCustomRepository.saveAllByBatch(customers);
+        customerService.saveAllByBatch();
         watch.stop();
-        System.out.println("Time Elapsed: " + watch.getTotalTimeSeconds());
-        return ResponseEntity.ok("OK");
+        System.out.println("Time elapsed for insert: " + watch.getTotalTimeSeconds());
+        return ResponseEntity.ok("Inserted in " + watch.getTotalTimeSeconds());
     }
 
-    public String generateRandomString() {
-        // create a string of all characters
-        String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    @PutMapping("/customers")
+    public ResponseEntity<String> updateCustomersBatch() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        customerService.updateAllByBatch();
+        watch.stop();
+        System.out.println("Total time elapsed: " + watch.getTotalTimeSeconds());
+        return ResponseEntity.ok("Updated in " + watch.getTotalTimeSeconds());
+    }
 
-        // create random string builder
-        StringBuilder sb = new StringBuilder();
-
-        // specify length of random string
-        int length = 7;
-
-        for (int i = 0; i < length; i++) {
-
-            // generate random index number
-            int index = random.nextInt(alphabet.length());
-
-            // get character specified by index
-            // from the string
-            char randomChar = alphabet.charAt(index);
-
-            // append the character to string builder
-            sb.append(randomChar);
-        }
-        return sb.toString();
+    @GetMapping("/customers")
+    public ResponseEntity<List<Customer>> getAllCustomers() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        List<Customer> customers = customerService.getAllCustomers();
+        watch.stop();
+        System.out.println("Total time elapsed for getting all customers: " + watch.getTotalTimeSeconds());
+        return ResponseEntity.ok(customers);
     }
 }

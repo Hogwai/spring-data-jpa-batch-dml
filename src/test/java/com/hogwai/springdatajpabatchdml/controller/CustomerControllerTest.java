@@ -1,24 +1,72 @@
 package com.hogwai.springdatajpabatchdml.controller;
 
+import com.hogwai.springdatajpabatchdml.repository.CustomerCustomRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc()
 class CustomerControllerTest {
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    CustomerCustomRepository repository;
+
+    @BeforeEach
+    void deleteAll() {
+        repository.deleteAllCustomers();
+    }
 
     @Test
     void whenInsertingCustomers_thenCustomersAreCreated() throws Exception {
         mockMvc.perform(post("/customers"))
                 .andExpect(status().isOk());
+        mockMvc.perform(get("/customers"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(100000)))
+                .andExpect(jsonPath("$[0].creationDate",
+                        is(new SimpleDateFormat("yyyy-MM-dd").format(new Date()))))
+                .andExpect(jsonPath("$[0].updateDate", is(nullValue())));
+    }
+
+    @Test
+    void whenUpdatingCustomers_thenCustomersAreUpdated() throws Exception {
+        mockMvc.perform(post("/customers"))
+                .andExpect(status().isOk());
+        mockMvc.perform(put("/customers"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/customers"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(100000)))
+                .andExpect(jsonPath("$[0].creationDate",
+                        is(new SimpleDateFormat("yyyy-MM-dd").format(new Date()))))
+                .andExpect(jsonPath("$[0].updateDate",
+                        is(new SimpleDateFormat("yyyy-MM-dd").format(new Date()))));
+    }
+
+    @Test
+    void whenGettingAllCustomers_thenCustomersAreRetrieved() throws Exception {
+        mockMvc.perform(post("/customers"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/customers"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(100000)))
+                .andExpect(jsonPath("$[0].creationDate",
+                        is(new SimpleDateFormat("yyyy-MM-dd").format(new Date()))))
+                .andExpect(jsonPath("$[0].updateDate", is(nullValue())));
     }
 
 }

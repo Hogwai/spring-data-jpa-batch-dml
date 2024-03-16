@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.Date;
+
 @Entity
 @AllArgsConstructor
 @Builder
@@ -21,4 +23,7 @@ public class Customer {
     private String country;
     private String address;
     private String city;
+
+    private Date creationDate;
+    private Date updateDate;
 }
