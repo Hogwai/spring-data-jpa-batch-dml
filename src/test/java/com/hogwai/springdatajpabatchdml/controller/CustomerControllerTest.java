@@ -32,9 +32,9 @@ class CustomerControllerTest {
 
     @Test
     void whenInsertingCustomers_thenCustomersAreCreated() throws Exception {
-        mockMvc.perform(post("/customers"))
+        mockMvc.perform(post("/customers/save-all"))
                 .andExpect(status().isOk());
-        mockMvc.perform(get("/customers"))
+        mockMvc.perform(get("/customers/get-all"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(100000)))
                 .andExpect(jsonPath("$[0].creationDate",
@@ -44,11 +44,12 @@ class CustomerControllerTest {
 
     @Test
     void whenUpdatingCustomers_thenCustomersAreUpdated() throws Exception {
-        mockMvc.perform(post("/customers"))
+        mockMvc.perform(post("/customers/save-all"))
                 .andExpect(status().isOk());
-        mockMvc.perform(put("/customers"))
+        mockMvc.perform(put("/customers/update-all")
+                        .queryParam("hibernate", String.valueOf(false)))
                 .andExpect(status().isOk());
-        mockMvc.perform(get("/customers"))
+        mockMvc.perform(get("/customers/get-all"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(100000)))
                 .andExpect(jsonPath("$[0].creationDate",
@@ -59,9 +60,22 @@ class CustomerControllerTest {
 
     @Test
     void whenGettingAllCustomers_thenCustomersAreRetrieved() throws Exception {
-        mockMvc.perform(post("/customers"))
+        mockMvc.perform(post("/customers/save-all"))
                 .andExpect(status().isOk());
-        mockMvc.perform(get("/customers"))
+        mockMvc.perform(get("/customers/get-all"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(100000)))
+                .andExpect(jsonPath("$[0].creationDate",
+                        is(new SimpleDateFormat("yyyy-MM-dd").format(new Date()))))
+                .andExpect(jsonPath("$[0].updateDate", is(nullValue())));
+    }
+
+    @Test
+    void whenInsertingCustomers_thenCustomersAreCreatedHibernate() throws Exception {
+        mockMvc.perform(post("/customers/save-all")
+                        .queryParam("hibernate", String.valueOf(true)))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/customers/get-all"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(100000)))
                 .andExpect(jsonPath("$[0].creationDate",

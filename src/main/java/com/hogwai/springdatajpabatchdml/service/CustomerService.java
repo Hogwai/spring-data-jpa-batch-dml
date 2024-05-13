@@ -14,4 +14,10 @@ public interface CustomerService {
 
     @Transactional(readOnly = true)
     List<Customer> getAllCustomers();
+
+    @Transactional
+    void saveAllByBatchHibernate();
+
+    @Transactional
+    void updateAllByBatchHibernate();
 }

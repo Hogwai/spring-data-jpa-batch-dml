@@ -2,41 +2,33 @@ package com.hogwai.springdatajpabatchdml.service.impl;
 
 import com.hogwai.springdatajpabatchdml.model.Customer;
 import com.hogwai.springdatajpabatchdml.repository.CustomerCustomRepository;
+import com.hogwai.springdatajpabatchdml.repository.CustomerRepository;
 import com.hogwai.springdatajpabatchdml.service.CustomerService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StopWatch;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
+
+import static com.hogwai.springdatajpabatchdml.util.CustomerFactory.generateCustomers;
 
 @Service
 public class CustomerServiceImpl implements CustomerService {
 
-    private final Random random = new Random();
-
     private final CustomerCustomRepository customerCustomRepository;
+    private final CustomerRepository customerRepository;
 
-    public CustomerServiceImpl(CustomerCustomRepository customerCustomRepository) {
+    public CustomerServiceImpl(CustomerCustomRepository customerCustomRepository,
+                               CustomerRepository customerRepository) {
         this.customerCustomRepository = customerCustomRepository;
+        this.customerRepository = customerRepository;
     }
 
+    //region JDBC template
     @Override
     @Transactional
     public void saveAllByBatch(){
-        List<Customer> customers = new ArrayList<>(100000);
-        for (int i = 0; i < 100000; i++) {
-            Customer customer = Customer.builder()
-                    .id((long) i + 1)
-                    .firstName(generateRandomString())
-                    .lastName(generateRandomString())
-                    .address(generateRandomString())
-                    .city(generateRandomString())
-                    .country(generateRandomString())
-                    .build();
-            customers.add(customer);
-        }
+        List<Customer> customers = generateCustomers(100000);
         System.out.println("Generated customers: " + customers.size());
         customerCustomRepository.saveAllByBatch(customers);
     }
@@ -61,29 +53,29 @@ public class CustomerServiceImpl implements CustomerService {
     public List<Customer> getAllCustomers() {
         return customerCustomRepository.getAllCustomers();
     }
+    //endregion
 
-    public String generateRandomString() {
-        // create a string of all characters
-        String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-        // create random string builder
-        StringBuilder sb = new StringBuilder();
-
-        // specify length of random string
-        int length = 7;
-
-        for (int i = 0; i < length; i++) {
-
-            // generate random index number
-            int index = random.nextInt(alphabet.length());
-
-            // get character specified by index
-            // from the string
-            char randomChar = alphabet.charAt(index);
-
-            // append the character to string builder
-            sb.append(randomChar);
-        }
-        return sb.toString();
+    //region Custom Hibernate repository
+    @Override
+    @Transactional
+    public void saveAllByBatchHibernate() {
+        List<Customer> customers = generateCustomers(100000);
+        System.out.println("Generated customers: " + customers.size());
+        System.out.printf("Saved customers: %d %n", customerRepository.mergeAll(customers).size());
     }
+
+    @Override
+    @Transactional
+    public void updateAllByBatchHibernate(){
+        List<Customer> customersToUpdate = customerRepository.findAll();
+        System.out.printf("Retrieved customers : %d %n", customersToUpdate.size());
+
+        StopWatch updateWatch = new StopWatch();
+        updateWatch.start();
+        System.out.printf("Updated customers: %d %n ", customerRepository.updateAll(customersToUpdate).size());
+        updateWatch.stop();
+
+        System.out.printf("Time elapsed for update: %.0f %n ", updateWatch.getTotalTimeSeconds());
+    }
+    //endregion
 }

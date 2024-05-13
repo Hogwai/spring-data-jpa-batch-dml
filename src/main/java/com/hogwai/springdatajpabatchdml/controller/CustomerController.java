@@ -4,14 +4,12 @@ import com.hogwai.springdatajpabatchdml.model.Customer;
 import com.hogwai.springdatajpabatchdml.service.CustomerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StopWatch;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@RequestMapping("/customers")
 public class CustomerController {
     private final CustomerService customerService;
 
@@ -19,27 +17,36 @@ public class CustomerController {
         this.customerService = customerService;
     }
 
-    @PostMapping("/customers")
-    public ResponseEntity<String> insertCustomersBatch() {
+    @PostMapping("/save-all")
+    public ResponseEntity<String> insertCustomersBatch(@RequestParam(required = false) Boolean hibernate) {
         StopWatch watch = new StopWatch();
         watch.start();
-        customerService.saveAllByBatch();
+        if(Boolean.TRUE.equals(hibernate)) {
+            customerService.saveAllByBatchHibernate();
+        } else {
+            customerService.saveAllByBatch();
+        }
         watch.stop();
         System.out.println("Time elapsed for insert: " + watch.getTotalTimeSeconds());
         return ResponseEntity.ok("Inserted in " + watch.getTotalTimeSeconds());
     }
 
-    @PutMapping("/customers")
-    public ResponseEntity<String> updateCustomersBatch() {
+    @PutMapping("/update-all")
+    public ResponseEntity<String> updateCustomersBatch(@RequestParam boolean hibernate) {
         StopWatch watch = new StopWatch();
         watch.start();
-        customerService.updateAllByBatch();
+        if(hibernate) {
+            customerService.updateAllByBatchHibernate();
+        } else {
+            customerService.updateAllByBatch();
+        }
+
         watch.stop();
         System.out.println("Total time elapsed: " + watch.getTotalTimeSeconds());
         return ResponseEntity.ok("Updated in " + watch.getTotalTimeSeconds());
     }
 
-    @GetMapping("/customers")
+    @GetMapping("/get-all")
     public ResponseEntity<List<Customer>> getAllCustomers() {
         StopWatch watch = new StopWatch();
         watch.start();
