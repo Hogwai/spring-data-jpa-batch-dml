@@ -18,13 +18,14 @@ public class CustomerController {
     }
 
     @PostMapping("/save-all")
-    public ResponseEntity<String> insertCustomersBatch(@RequestParam(required = false) Boolean hibernate) {
+    public ResponseEntity<String> insertCustomersBatch(@RequestParam(required = false) Boolean hibernate,
+                                                       @RequestParam Integer number) {
         StopWatch watch = new StopWatch();
         watch.start();
         if(Boolean.TRUE.equals(hibernate)) {
-            customerService.saveAllByBatchHibernate();
+            customerService.saveAllByBatchHibernate(number);
         } else {
-            customerService.saveAllByBatch();
+            customerService.saveAllByBatch(number);
         }
         watch.stop();
         System.out.println("Time elapsed for insert: " + watch.getTotalTimeSeconds());
@@ -52,7 +53,18 @@ public class CustomerController {
         watch.start();
         List<Customer> customers = customerService.getAllCustomers();
         watch.stop();
-        System.out.println("Total time elapsed for getting all customers: " + watch.getTotalTimeSeconds());
+        System.out.printf("Total time elapsed for getting all customers: %.0f %n", watch.getTotalTimeSeconds());
         return ResponseEntity.ok(customers);
+    }
+
+
+    @DeleteMapping("/delete-all")
+    public ResponseEntity<String> deleteAllCustomers() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        customerService.deleteAll();
+        watch.stop();
+        System.out.printf("Total time elapsed for deleting all customers: %.0f %n", watch.getTotalTimeSeconds());
+        return ResponseEntity.ok().body("Deleted all customers");
     }
 }

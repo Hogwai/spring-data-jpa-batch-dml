@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface CustomerService {
     @Transactional
-    void saveAllByBatch();
+    void saveAllByBatch(Integer number);
 
     @Transactional
     void updateAllByBatch();
@@ -16,8 +16,11 @@ public interface CustomerService {
     List<Customer> getAllCustomers();
 
     @Transactional
-    void saveAllByBatchHibernate();
+    void saveAllByBatchHibernate(Integer number);
 
     @Transactional
     void updateAllByBatchHibernate();
+
+    @Transactional
+    void deleteAll();
 }

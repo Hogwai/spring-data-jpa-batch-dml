@@ -27,8 +27,8 @@ public class CustomerServiceImpl implements CustomerService {
     //region JDBC template
     @Override
     @Transactional
-    public void saveAllByBatch(){
-        List<Customer> customers = generateCustomers(100000);
+    public void saveAllByBatch(Integer number){
+        List<Customer> customers = generateCustomers(number);
         System.out.println("Generated customers: " + customers.size());
         customerCustomRepository.saveAllByBatch(customers);
     }
@@ -58,8 +58,8 @@ public class CustomerServiceImpl implements CustomerService {
     //region Custom Hibernate repository
     @Override
     @Transactional
-    public void saveAllByBatchHibernate() {
-        List<Customer> customers = generateCustomers(100000);
+    public void saveAllByBatchHibernate(Integer number) {
+        List<Customer> customers = generateCustomers(number);
         System.out.println("Generated customers: " + customers.size());
         System.out.printf("Saved customers: %d %n", customerRepository.mergeAll(customers).size());
     }
@@ -76,6 +76,12 @@ public class CustomerServiceImpl implements CustomerService {
         updateWatch.stop();
 
         System.out.printf("Time elapsed for update: %.0f %n ", updateWatch.getTotalTimeSeconds());
+    }
+
+    @Override
+    @Transactional
+    public void deleteAll() {
+        customerRepository.deleteAll();
     }
     //endregion
 }
