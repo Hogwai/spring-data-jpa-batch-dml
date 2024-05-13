@@ -32,7 +32,8 @@ class CustomerControllerTest {
 
     @Test
     void whenInsertingCustomers_thenCustomersAreCreated() throws Exception {
-        mockMvc.perform(post("/customers/save-all"))
+        mockMvc.perform(post("/customers/save-all")
+                        .queryParam("number", String.valueOf(100000)))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/customers/get-all"))
                 .andExpect(status().isOk())
@@ -73,7 +74,8 @@ class CustomerControllerTest {
     @Test
     void whenInsertingCustomers_thenCustomersAreCreatedHibernate() throws Exception {
         mockMvc.perform(post("/customers/save-all")
-                        .queryParam("hibernate", String.valueOf(true)))
+                        .queryParam("hibernate", String.valueOf(true))
+                        .queryParam("number", String.valueOf(100000)))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/customers/get-all"))
                 .andExpect(status().isOk())
