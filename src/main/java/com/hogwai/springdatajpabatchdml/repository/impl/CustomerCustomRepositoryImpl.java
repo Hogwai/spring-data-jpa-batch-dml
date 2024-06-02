@@ -1,9 +1,8 @@
 package com.hogwai.springdatajpabatchdml.repository.impl;
 
 import com.hogwai.springdatajpabatchdml.model.Customer;
+import com.hogwai.springdatajpabatchdml.model.Order;
 import com.hogwai.springdatajpabatchdml.repository.CustomerCustomRepository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -22,10 +21,10 @@ public class CustomerCustomRepositoryImpl implements CustomerCustomRepository {
     @Override
     public void saveAllByBatch(List<Customer> customers) {
         String sql =
-                """
-                INSERT INTO customer (id, first_name, last_name, address, city, country, creation_date)
-                VALUES (nextval('cust_seq'), ?, ?, ?, ?, ?, ?)
-                """;
+            """
+                INSERT INTO customer (id, first_name, last_name, address, city, country, creation_date, store_id)
+                VALUES (nextval('cust_seq'), ?, ?, ?, ?, ?, ?, ?)
+            """;
 
         java.sql.Date creationDate = new java.sql.Date(new java.util.Date().getTime());
         jdbcTemplate.batchUpdate(
@@ -39,6 +38,23 @@ public class CustomerCustomRepositoryImpl implements CustomerCustomRepository {
                     ps.setString(4, customer.getCity());
                     ps.setString(5, customer.getCountry());
                     ps.setDate(6, creationDate);
+                    ps.setLong(7, customer.getStore().getId());
+                });
+
+        String sqlOrder =
+                """
+                    INSERT INTO orders (id, content, order_date, customer_id)
+                    VALUES (nextval('order_seq'), ?, ?, ?)
+                """;
+        List<Order> orders = customers.stream().flatMap(customer -> customer.getOrders().stream()).toList();
+        jdbcTemplate.batchUpdate(
+                sqlOrder,
+                orders,
+                orders.size(),
+                (PreparedStatement ps, Order order) -> {
+                    ps.setString(1, order.getContent());
+                    ps.setDate(2, creationDate);
+                    ps.setLong(3, order.getCustomer().getId());
                 });
     }
 
@@ -46,24 +62,24 @@ public class CustomerCustomRepositoryImpl implements CustomerCustomRepository {
     public void updateAllByBatch(List<Customer> customers) {
         String sql =
                 """
-                UPDATE customer
-                SET
-                    city = ?,
-                    country = ?,
-                    update_date = ?
-                WHERE id = ?
-                """;
+                        UPDATE customer
+                        SET
+                            city = ?,
+                            country = ?,
+                            update_date = ?
+                        WHERE id = ?
+                        """;
         java.sql.Date updateDate = new java.sql.Date(new java.util.Date().getTime());
         jdbcTemplate.batchUpdate(
-            sql,
-            customers,
-            customers.size(),
-            (PreparedStatement ps, Customer customer) -> {
-                ps.setString(1, customer.getCity());
-                ps.setString(2, customer.getCountry());
-                ps.setDate(3, updateDate);
-                ps.setLong(4, customer.getId());
-            }
+                sql,
+                customers,
+                customers.size(),
+                (PreparedStatement ps, Customer customer) -> {
+                    ps.setString(1, customer.getCity());
+                    ps.setString(2, customer.getCountry());
+                    ps.setDate(3, updateDate);
+                    ps.setLong(4, customer.getId());
+                }
         );
     }
 
@@ -72,23 +88,28 @@ public class CustomerCustomRepositoryImpl implements CustomerCustomRepository {
         String sql = "SELECT * FROM CUSTOMER";
 
         return jdbcTemplate.query(
-            sql,
-            (rs, rowNum) ->
-                new Customer(
-                    rs.getLong("id"),
-                    rs.getString("first_name"),
-                    rs.getString("last_name"),
-                    rs.getString("country"),
-                    rs.getString("address"),
-                    rs.getString("city"),
-                    rs.getDate("creation_date"),
-                    rs.getDate("update_date")
-                )
+                sql,
+                (rs, rowNum) ->
+                        Customer.builder()
+                                .id(rs.getLong("id"))
+                                .firstName(rs.getString("first_name"))
+                                .lastName(rs.getString("last_name"))
+                                .country(rs.getString("country"))
+                                .address(rs.getString("address"))
+                                .city(rs.getString("city"))
+                                .creationDate(rs.getDate("creation_date"))
+                                .updateDate(rs.getDate("update_date"))
+                                .build()
         );
     }
 
     @Override
     public void deleteAllCustomers() {
         jdbcTemplate.update("DELETE FROM customer");
+    }
+
+    @Override
+    public void deleteAllOrders() {
+        jdbcTemplate.update("DELETE FROM orders");
     }
 }

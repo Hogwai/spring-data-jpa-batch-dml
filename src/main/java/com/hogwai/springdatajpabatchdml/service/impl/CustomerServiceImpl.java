@@ -1,8 +1,10 @@
 package com.hogwai.springdatajpabatchdml.service.impl;
 
 import com.hogwai.springdatajpabatchdml.model.Customer;
+import com.hogwai.springdatajpabatchdml.model.Store;
 import com.hogwai.springdatajpabatchdml.repository.CustomerCustomRepository;
 import com.hogwai.springdatajpabatchdml.repository.CustomerRepository;
+import com.hogwai.springdatajpabatchdml.repository.StoreRepository;
 import com.hogwai.springdatajpabatchdml.service.CustomerService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,25 +19,36 @@ public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerCustomRepository customerCustomRepository;
     private final CustomerRepository customerRepository;
+    private final StoreRepository storeRepository;
 
     public CustomerServiceImpl(CustomerCustomRepository customerCustomRepository,
-                               CustomerRepository customerRepository) {
+                               CustomerRepository customerRepository,
+                               StoreRepository storeRepository) {
         this.customerCustomRepository = customerCustomRepository;
         this.customerRepository = customerRepository;
+        this.storeRepository = storeRepository;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Customer> getAllCustomersWithStoreOrders() {
+        return customerRepository.findCustomersWithStoreOrders();
     }
 
     //region JDBC template
     @Override
     @Transactional
-    public void saveAllByBatch(Integer number){
+    public void saveAllByBatch(Integer number) {
         List<Customer> customers = generateCustomers(number);
         System.out.println("Generated customers: " + customers.size());
+        Store store = storeRepository.getReferenceById(1L);
+        customers.forEach(customer -> customer.setStore(store));
         customerCustomRepository.saveAllByBatch(customers);
     }
 
     @Override
     @Transactional
-    public void updateAllByBatch(){
+    public void updateAllByBatch() {
         List<Customer> customersToUpdate = customerCustomRepository.getAllCustomers();
         System.out.println("Retrieved customers : " + customersToUpdate.size());
 
@@ -66,7 +79,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     @Transactional
-    public void updateAllByBatchHibernate(){
+    public void updateAllByBatchHibernate() {
         List<Customer> customersToUpdate = customerRepository.findAll();
         System.out.printf("Retrieved customers : %d %n", customersToUpdate.size());
 
@@ -81,7 +94,8 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional
     public void deleteAll() {
-        customerRepository.deleteAll();
+        customerCustomRepository.deleteAllOrders();
+        customerCustomRepository.deleteAllCustomers();
     }
     //endregion
 }

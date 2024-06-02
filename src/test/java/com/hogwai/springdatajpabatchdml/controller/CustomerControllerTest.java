@@ -45,7 +45,8 @@ class CustomerControllerTest {
 
     @Test
     void whenUpdatingCustomers_thenCustomersAreUpdated() throws Exception {
-        mockMvc.perform(post("/customers/save-all"))
+        mockMvc.perform(post("/customers/save-all")
+                        .queryParam("number", String.valueOf(100000)))
                 .andExpect(status().isOk());
         mockMvc.perform(put("/customers/update-all")
                         .queryParam("hibernate", String.valueOf(false)))
@@ -61,7 +62,8 @@ class CustomerControllerTest {
 
     @Test
     void whenGettingAllCustomers_thenCustomersAreRetrieved() throws Exception {
-        mockMvc.perform(post("/customers/save-all"))
+        mockMvc.perform(post("/customers/save-all")
+                        .queryParam("number", String.valueOf(100000)))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/customers/get-all"))
                 .andExpect(status().isOk())
@@ -69,6 +71,24 @@ class CustomerControllerTest {
                 .andExpect(jsonPath("$[0].creationDate",
                         is(new SimpleDateFormat("yyyy-MM-dd").format(new Date()))))
                 .andExpect(jsonPath("$[0].updateDate", is(nullValue())));
+    }
+
+
+    @Test
+    void whenGettingAllCustomersWithOrders_thenCustomersWithOrdersAreRetrieved() throws Exception {
+        mockMvc.perform(post("/stores/save-all")
+                .queryParam("number", String.valueOf(1)));
+        mockMvc.perform(post("/customers/save-all")
+                        .queryParam("number", String.valueOf(100000)))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/customers/get-all-with-store-orders"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(100000)))
+                .andExpect(jsonPath("$[0].creationDate", is(notNullValue())))
+                .andExpect(jsonPath("$[0].updateDate", is(nullValue())))
+//                .andExpect(jsonPath("$[0].orders", hasSize(10)))
+                .andExpect(jsonPath("$[0].store", is(notNullValue())));
+
     }
 
     @Test

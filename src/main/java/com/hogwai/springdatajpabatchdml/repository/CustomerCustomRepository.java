@@ -12,4 +12,6 @@ public interface CustomerCustomRepository  {
     List<Customer> getAllCustomers();
 
     void deleteAllCustomers();
+
+    void deleteAllOrders();
 }

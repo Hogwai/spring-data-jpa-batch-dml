@@ -5,6 +5,7 @@ import com.hogwai.springdatajpabatchdml.model.Customer;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.hogwai.springdatajpabatchdml.util.OrderFactory.generateOrder;
 import static com.hogwai.springdatajpabatchdml.util.StringUtil.generateRandomString;
 
 public class CustomerFactory {
@@ -25,6 +26,7 @@ public class CustomerFactory {
                     .country(generateRandomString())
                     .creationDate(creationDate)
                     .build();
+            customer.setOrders(generateOrder(1, customer));
             customers.add(customer);
         }
         return customers;

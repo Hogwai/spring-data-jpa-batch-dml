@@ -1,6 +1,7 @@
 package com.hogwai.springdatajpabatchdml.controller;
 
 import com.hogwai.springdatajpabatchdml.model.Customer;
+import com.hogwai.springdatajpabatchdml.record.CustomerRecord;
 import com.hogwai.springdatajpabatchdml.service.CustomerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StopWatch;
@@ -47,6 +48,17 @@ public class CustomerController {
         return ResponseEntity.ok("Updated in " + watch.getTotalTimeSeconds());
     }
 
+    @GetMapping("/get-all-with-store-orders")
+    public ResponseEntity<List<CustomerRecord>> getAllCustomersWithStore() {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        List<Customer> customers = customerService.getAllCustomersWithStoreOrders();
+        List<CustomerRecord> customerRecords = customers.stream().map(CustomerRecord::toRecord).toList();
+        watch.stop();
+        System.out.println("Total time elapsed for getting all customers: " + watch.getTotalTimeSeconds());
+        return ResponseEntity.ok(customerRecords);
+    }
+
     @GetMapping("/get-all")
     public ResponseEntity<List<Customer>> getAllCustomers() {
         StopWatch watch = new StopWatch();
@@ -56,7 +68,6 @@ public class CustomerController {
         System.out.printf("Total time elapsed for getting all customers: %.0f %n", watch.getTotalTimeSeconds());
         return ResponseEntity.ok(customers);
     }
-
 
     @DeleteMapping("/delete-all")
     public ResponseEntity<String> deleteAllCustomers() {
