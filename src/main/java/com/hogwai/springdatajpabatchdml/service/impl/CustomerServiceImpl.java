@@ -3,30 +3,40 @@ package com.hogwai.springdatajpabatchdml.service.impl;
 import com.hogwai.springdatajpabatchdml.model.Customer;
 import com.hogwai.springdatajpabatchdml.model.Store;
 import com.hogwai.springdatajpabatchdml.repository.CustomerCustomRepository;
+import com.hogwai.springdatajpabatchdml.repository.CustomerJdbcRepository;
 import com.hogwai.springdatajpabatchdml.repository.CustomerRepository;
 import com.hogwai.springdatajpabatchdml.repository.StoreRepository;
 import com.hogwai.springdatajpabatchdml.service.CustomerService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StopWatch;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.hogwai.springdatajpabatchdml.util.CustomerFactory.generateCustomers;
 
 @Service
 public class CustomerServiceImpl implements CustomerService {
 
+    private static final Logger log = LoggerFactory.getLogger(CustomerServiceImpl.class);
+    public static final String CUSTOMER_GENERATED = "Generated customers: {}";
+
     private final CustomerCustomRepository customerCustomRepository;
     private final CustomerRepository customerRepository;
     private final StoreRepository storeRepository;
+    private final CustomerJdbcRepository customerJdbcRepository;
 
     public CustomerServiceImpl(CustomerCustomRepository customerCustomRepository,
                                CustomerRepository customerRepository,
-                               StoreRepository storeRepository) {
+                               StoreRepository storeRepository,
+                               CustomerJdbcRepository customerJdbcRepository) {
         this.customerCustomRepository = customerCustomRepository;
         this.customerRepository = customerRepository;
         this.storeRepository = storeRepository;
+        this.customerJdbcRepository = customerJdbcRepository;
     }
 
     @Override
@@ -35,12 +45,38 @@ public class CustomerServiceImpl implements CustomerService {
         return customerRepository.findCustomersWithStoreOrders();
     }
 
+    @Transactional
+    @Override
+    public void insertCustomersWithUnnest(Integer number) {
+        Optional<Long> customerId = customerRepository.findMaxCustomerId();
+        Integer maxId = customerId.map(Math::toIntExact).orElse(1);
+        List<Customer> customers = generateCustomers(number, maxId);
+        log.info(CUSTOMER_GENERATED, customers.size());
+        Store store = storeRepository.getReferenceById(1L);
+        customers.forEach(customer -> customer.setStore(store));
+        customerJdbcRepository.batchInsertWithArrays(customers);
+    }
+
+    @Transactional
+    @Override
+    public void insertCustomersWithCopy(Integer number) {
+        Optional<Long> customerId = customerRepository.findMaxCustomerId();
+        Integer maxId = customerId.map(Math::toIntExact).orElse(1);
+        List<Customer> customers = generateCustomers(number, maxId);
+        log.info(CUSTOMER_GENERATED, customers.size());
+        Store store = storeRepository.getReferenceById(1L);
+        customers.forEach(customer -> customer.setStore(store));
+        customerJdbcRepository.insertWithCopy(customers);
+    }
+
     //region JDBC template
     @Override
     @Transactional
     public void saveAllByBatch(Integer number) {
-        List<Customer> customers = generateCustomers(number);
-        System.out.println("Generated customers: " + customers.size());
+        Optional<Long> customerId = customerRepository.findMaxCustomerId();
+        Integer maxId = customerId.map(Math::toIntExact).orElse(1);
+        List<Customer> customers = generateCustomers(number, maxId);
+        log.info(CUSTOMER_GENERATED, customers.size());
         Store store = storeRepository.getReferenceById(1L);
         customers.forEach(customer -> customer.setStore(store));
         customerCustomRepository.saveAllByBatch(customers);
@@ -55,7 +91,7 @@ public class CustomerServiceImpl implements CustomerService {
         StopWatch updateWatch = new StopWatch();
         updateWatch.start();
         customerCustomRepository.updateAllByBatch(customersToUpdate);
-        System.out.println("Updated customers : " + customersToUpdate.size());
+        log.info("Updated customers : {}", customersToUpdate.size());
         updateWatch.stop();
 
         System.out.println("Time elapsed for update: " + updateWatch.getTotalTimeSeconds());
@@ -72,8 +108,10 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     @Transactional
     public void saveAllByBatchHibernate(Integer number) {
-        List<Customer> customers = generateCustomers(number);
-        System.out.println("Generated customers: " + customers.size());
+        Optional<Long> customerId = customerRepository.findMaxCustomerId();
+        Integer maxId = customerId.map(Math::toIntExact).orElse(1);
+        List<Customer> customers = generateCustomers(number, maxId);
+        log.info(CUSTOMER_GENERATED, customers.size());
         System.out.printf("Saved customers: %d %n", customerRepository.mergeAll(customers).size());
     }
 

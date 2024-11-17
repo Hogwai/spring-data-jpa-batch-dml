@@ -19,14 +19,18 @@ public class CustomerController {
     }
 
     @PostMapping("/save-all")
-    public ResponseEntity<String> insertCustomersBatch(@RequestParam(required = false) Boolean hibernate,
+    public ResponseEntity<String> insertCustomersBatch(@RequestParam(required = false) String mode,
                                                        @RequestParam Integer number) {
         StopWatch watch = new StopWatch();
         watch.start();
-        if(Boolean.TRUE.equals(hibernate)) {
-            customerService.saveAllByBatchHibernate(number);
-        } else {
+        if (mode == null) {
             customerService.saveAllByBatch(number);
+        } else if (mode.equals("hibernate")) {
+            customerService.saveAllByBatchHibernate(number);
+        } else if (mode.equals("unnest")) {
+            customerService.insertCustomersWithUnnest(number);
+        } else  if (mode.equals("copy")) {
+            customerService.insertCustomersWithCopy(number);
         }
         watch.stop();
         System.out.println("Time elapsed for insert: " + watch.getTotalTimeSeconds());
@@ -37,7 +41,7 @@ public class CustomerController {
     public ResponseEntity<String> updateCustomersBatch(@RequestParam boolean hibernate) {
         StopWatch watch = new StopWatch();
         watch.start();
-        if(hibernate) {
+        if (hibernate) {
             customerService.updateAllByBatchHibernate();
         } else {
             customerService.updateAllByBatch();

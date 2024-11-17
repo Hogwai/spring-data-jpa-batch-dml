@@ -13,10 +13,10 @@ public class CustomerFactory {
     private CustomerFactory() {
     }
 
-    public static List<Customer> generateCustomers(Integer number) {
+    public static List<Customer> generateCustomers(Integer number, Integer startId) {
         java.sql.Date creationDate = new java.sql.Date(new java.util.Date().getTime());
         List<Customer> customers = new ArrayList<>(number);
-        for (int i = 0; i < number; i++) {
+        for (int i = startId; i < startId + number; i++) {
             Customer customer = Customer.builder()
                     .id((long) i + 1)
                     .firstName(generateRandomString())

@@ -21,6 +21,6 @@ public class Store {
 
     private String name;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "store")
+    @OneToMany(cascade = CascadeType.PERSIST, mappedBy = "store")
     private List<Customer> customers;
 }

@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 import static com.hogwai.springdatajpabatchdml.util.StoreFactory.generateStores;
+import static com.hogwai.springdatajpabatchdml.util.StringUtil.generateRandomString;
 
 @Service
 public class StoreServiceImpl implements StoreService {
@@ -25,6 +26,16 @@ public class StoreServiceImpl implements StoreService {
         List<Store> stores = generateStores(number);
         System.out.println("Generated Stores: " + stores.size());
         storeRepository.mergeAll(stores);
+    }
+
+    @Transactional
+    @Override
+    public void saveOne(Long storeId) {
+        Store store = Store.builder()
+                .id(storeId)
+                .name(generateRandomString())
+                .build();
+        storeRepository.merge(store);
     }
 
     @Override

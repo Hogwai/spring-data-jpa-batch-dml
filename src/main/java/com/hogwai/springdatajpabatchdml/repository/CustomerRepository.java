@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CustomerRepository
@@ -15,4 +16,9 @@ public interface CustomerRepository
     @EntityGraph(attributePaths = {"store", "orders"})
     @Query("SELECT c FROM Customer c")
     List<Customer> findCustomersWithStoreOrders();
+
+
+    @Query("SELECT MAX(c.id) FROM Customer c")
+    Optional<Long> findMaxCustomerId();
+
 }
