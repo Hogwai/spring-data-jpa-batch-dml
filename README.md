@@ -1,6 +1,6 @@
 # Spring Data JPA Batch DML
 
-Comparison of 4 batch insert strategies using Spring Data JPA and PostgreSQL.
+Comparison of 5 batch insert strategies using Spring Data JPA and PostgreSQL.
 
 ## Strategies
 
@@ -10,6 +10,7 @@ Comparison of 4 batch insert strategies using Spring Data JPA and PostgreSQL.
 | **JDBC Batch** | `JdbcTemplate.batchUpdate()` with native SQL |
 | **UNNEST** | `INSERT ... SELECT FROM UNNEST(...)` — single SQL statement using PostgreSQL arrays |
 | **COPY** | `COPY ... FROM STDIN` — PostgreSQL binary protocol via `CopyManager` |
+| **Multi-row VALUES** | `INSERT INTO ... VALUES (...), (...), ...` — single statement with all rows as parameter placeholders |
 
 ## Project Structure
 
@@ -23,9 +24,9 @@ spring-data-jpa-batch-dml/
 
 ### Modules
 
-- **batch-core** — shared business logic (JPA entities, repositories, 4 `CustomerService` implementations)
+- **batch-core** — shared business logic (JPA entities, repositories, 5 `CustomerService` implementations)
 - **web** — Spring Boot application with REST API (`/customers`, `/stores`), Spring Boot Admin, Springdoc
-- **benchmark** — JMH benchmarks comparing the 4 batch insert strategies
+- **benchmark** — JMH benchmarks comparing the 5 batch insert strategies
 
 ## Prerequisites
 
@@ -50,8 +51,8 @@ The application starts on port `8081`.
 ## API
 
 ```bash
-# Batch insert (modes: jdbc, hibernate, unnest, copy)
-curl -X POST "http://localhost:8081/customers/save-all?number=1000&mode=copy"
+# Batch insert (modes: jdbc, hibernate, unnest, copy, multirow)
+curl -X POST "http://localhost:8081/customers/save-all?number=1000&mode=multirow"
 
 # Get all customers
 curl http://localhost:8081/customers/get-all
@@ -90,12 +91,13 @@ Results are written to `benchmark/build/reports/jmh/results.json`.
 
 | Strategy | Avg (ms/op) | Error (ms) |
 |----------|-------------|------------|
-| UNNEST | **21.17** | ± 33.61 |
-| JDBC Batch | 26.21 | ± 63.64 |
-| COPY | 26.85 | ± 27.19 |
-| Hibernate Batch | 168.24 | ± 800.00 |
+| UNNEST | **17.47** | ± 21.90 |
+| Multi-row VALUES | 23.48 | ± 59.64 |
+| JDBC Batch | 23.68 | ± 82.60 |
+| COPY | 42.39 | ± 200.45 |
+| Hibernate Batch | 182.82 | ± 434.61 |
 
-**UNNEST** and **JDBC Batch** are the fastest for 1,000 rows. **Hibernate Batch** is significantly slower due to the persistence context overhead (dirty checking, cascade).
+**UNNEST** is the fastest for 1,000 rows, followed closely by **multi-row VALUES** and **JDBC Batch**. **Hibernate Batch** is significantly slower due to the persistence context overhead (dirty checking, cascade).
 
 ## Tech Stack
 

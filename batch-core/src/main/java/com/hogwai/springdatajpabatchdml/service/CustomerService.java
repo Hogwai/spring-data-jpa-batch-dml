@@ -6,13 +6,14 @@ import java.util.List;
 
 /**
  * Service interface for batch operations on {@link Customer} entities.
- * Four implementations exist, each using a different insert strategy:
- * JDBC batch, Hibernate batch, UNNEST and COPY.
+ * Five implementations exist, each using a different insert strategy:
+ * JDBC batch, Hibernate batch, UNNEST, COPY and multi-row VALUES.
  *
  * @see com.hogwai.springdatajpabatchdml.service.impl.JdbcBatchCustomerService
  * @see com.hogwai.springdatajpabatchdml.service.impl.HibernateBatchCustomerService
  * @see com.hogwai.springdatajpabatchdml.service.impl.UnnestBatchCustomerService
  * @see com.hogwai.springdatajpabatchdml.service.impl.CopyBatchCustomerService
+ * @see com.hogwai.springdatajpabatchdml.service.impl.MultiRowBatchCustomerService
  */
 public interface CustomerService {
 

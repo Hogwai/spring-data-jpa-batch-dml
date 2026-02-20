@@ -19,6 +19,7 @@ public class BatchInsertBenchmark {
     private CustomerService hibernateBatchService;
     private CustomerService unnestBatchService;
     private CustomerService copyBatchService;
+    private CustomerService multiRowBatchService;
     private CustomerService deleteService;
     private StoreService storeService;
 
@@ -32,6 +33,7 @@ public class BatchInsertBenchmark {
         hibernateBatchService = context.getBean("hibernateBatch", CustomerService.class);
         unnestBatchService = context.getBean("unnestBatch", CustomerService.class);
         copyBatchService = context.getBean("copyBatch", CustomerService.class);
+        multiRowBatchService = context.getBean("multiRowBatch", CustomerService.class);
         deleteService = jdbcBatchService;
         storeService = context.getBean(StoreService.class);
         storeService.saveOne();
@@ -66,5 +68,10 @@ public class BatchInsertBenchmark {
     @Benchmark
     public void copyBatchInsert() {
         copyBatchService.insertBatch(numberOfCustomers);
+    }
+
+    @Benchmark
+    public void multiRowBatchInsert() {
+        multiRowBatchService.insertBatch(numberOfCustomers);
     }
 }

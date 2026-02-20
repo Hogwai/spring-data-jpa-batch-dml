@@ -24,4 +24,12 @@ public interface CustomerJdbcRepository {
      * @param customers the customers to insert
      */
     void insertWithCopy(List<Customer> customers);
+
+    /**
+     * Inserts customers using a multi-row {@code INSERT INTO ... VALUES (...), (...), ...}
+     * statement. Rows are batched to avoid exceeding the maximum SQL statement size.
+     *
+     * @param customers the customers to insert
+     */
+    void insertWithMultiRowValues(List<Customer> customers);
 }

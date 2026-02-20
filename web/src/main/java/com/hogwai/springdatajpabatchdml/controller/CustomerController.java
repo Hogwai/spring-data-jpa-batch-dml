@@ -24,17 +24,20 @@ public class CustomerController {
     private final CustomerService hibernateBatchService;
     private final CustomerService unnestBatchService;
     private final CustomerService copyBatchService;
+    private final CustomerService multiRowBatchService;
     private final CustomerRepository customerRepository;
 
     public CustomerController(@Qualifier("jdbcBatch") CustomerService jdbcBatchService,
                               @Qualifier("hibernateBatch") CustomerService hibernateBatchService,
                               @Qualifier("unnestBatch") CustomerService unnestBatchService,
                               @Qualifier("copyBatch") CustomerService copyBatchService,
+                              @Qualifier("multiRowBatch") CustomerService multiRowBatchService,
                               CustomerRepository customerRepository) {
         this.jdbcBatchService = jdbcBatchService;
         this.hibernateBatchService = hibernateBatchService;
         this.unnestBatchService = unnestBatchService;
         this.copyBatchService = copyBatchService;
+        this.multiRowBatchService = multiRowBatchService;
         this.customerRepository = customerRepository;
     }
 
@@ -110,6 +113,7 @@ public class CustomerController {
             case "hibernate" -> hibernateBatchService;
             case "unnest" -> unnestBatchService;
             case "copy" -> copyBatchService;
+            case "multirow" -> multiRowBatchService;
             default -> jdbcBatchService;
         };
     }

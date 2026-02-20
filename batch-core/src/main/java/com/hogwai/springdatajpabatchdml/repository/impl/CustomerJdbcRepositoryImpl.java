@@ -27,6 +27,8 @@ import org.postgresql.copy.*;
  *       all rows in a single {@code INSERT ... SELECT FROM UNNEST(...)} statement.</li>
  *   <li><b>COPY</b> — writes tab-separated values through the PostgreSQL
  *       {@link org.postgresql.copy.CopyManager} for maximum throughput.</li>
+ *   <li><b>Multi-row VALUES</b> — builds a single {@code INSERT INTO ... VALUES (...), (...)}
+ *       statement with all rows inlined as parameter placeholders.</li>
  * </ul>
  */
 @Repository
@@ -108,6 +110,34 @@ public class CustomerJdbcRepositoryImpl implements CustomerJdbcRepository {
 
         } catch (Exception e) {
             throw new RuntimeException("Erreur lors de l'insertion COPY", e);
+        }
+    }
+
+    @Override
+    public void insertWithMultiRowValues(List<Customer> customers) {
+        List<List<Customer>> batches = splitIntoBatches(customers, BATCH_SIZE);
+
+        for (List<Customer> batch : batches) {
+            StringBuilder sql = new StringBuilder(
+                    "INSERT INTO customer (id, first_name, last_name, address, city, country, creation_date, store_id) VALUES ");
+
+            for (int i = 0; i < batch.size(); i++) {
+                if (i > 0) sql.append(", ");
+                sql.append("(nextval('cust_seq'), ?, ?, ?, ?, ?, ?, ?)");
+            }
+
+            jdbcTemplate.update(sql.toString(), ps -> {
+                int index = 1;
+                for (Customer customer : batch) {
+                    ps.setString(index++, customer.getFirstName());
+                    ps.setString(index++, customer.getLastName());
+                    ps.setString(index++, customer.getAddress());
+                    ps.setString(index++, customer.getCity());
+                    ps.setString(index++, customer.getCountry());
+                    ps.setDate(index++, new java.sql.Date(customer.getCreationDate().getTime()));
+                    ps.setLong(index++, customer.getStore().getId());
+                }
+            });
         }
     }
 
