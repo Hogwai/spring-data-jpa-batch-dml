@@ -1,0 +1,27 @@
+plugins {
+	id 'me.champeau.jmh'
+}
+
+dependencies {
+	implementation project(':batch-core')
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.postgresql:postgresql'
+
+	jmh 'org.openjdk.jmh:jmh-core:1.37'
+	jmh 'org.openjdk.jmh:jmh-generator-annprocess:1.37'
+	jmh project(':batch-core')
+	jmh 'org.springframework.boot:spring-boot-starter-data-jpa'
+	jmh 'org.postgresql:postgresql'
+}
+
+jmh {
+	fork = 1
+	warmupIterations = 1
+	iterations = 3
+	timeOnIteration = '5s'
+	warmup = '3s'
+	benchmarkMode = ['avgt']
+	timeUnit = 'ms'
+	resultFormat = 'JSON'
+	resultsFile = project.file("${project.layout.buildDirectory.get()}/reports/jmh/results.json")
+}
